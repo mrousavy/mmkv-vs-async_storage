@@ -1,0 +1,23 @@
+{
+  "$schema": "https://nitro.margelo.com/nitro.schema.json",
+  "cxxNamespace": [
+    "storage"
+  ],
+  "ios": {
+    "iosModuleName": "NitroDataStorage"
+  },
+  "android": {
+    "androidNamespace": [
+      "camera"
+    ],
+    "androidCxxLibName": "NitroDataStorage"
+  },
+  "autolinking": {
+    "DataStorage": {
+      "swift": "HybridDataStorage"
+    }
+  },
+  "ignorePaths": [
+    "**/node_modules"
+  ]
+}

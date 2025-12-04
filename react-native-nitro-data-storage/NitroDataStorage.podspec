@@ -12,25 +12,15 @@ Pod::Spec.new do |s|
   s.platforms    = { :ios => "17.0" }
   s.source       = { :git => package['repository']['url'], :tag => "v#{s.version}" }
 
-  s.source_files = "ios/**/*.{h,m,mm,swift}"
-  s.swift_version = '5.9'
-  
-  # C++ Configuration for NitroModules compatibility
-  s.compiler_flags = '-x objective-c++'
-  s.libraries = 'c++'
-  
-  s.pod_target_xcconfig = {
-    'CLANG_CXX_LANGUAGE_STANDARD' => 'c++20',
-    'CLANG_CXX_LIBRARY' => 'libc++',
-    'OTHER_CPLUSPLUSFLAGS' => '$(inherited) -std=c++20 -DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1',
-    'GCC_PREPROCESSOR_DEFINITIONS' => '$(inherited) FOLLY_NO_CONFIG FOLLY_CFG_NO_COROUTINES',
-    'HEADER_SEARCH_PATHS' => '$(inherited) "${PODS_ROOT}/RCT-Folly"'
-  }
+  s.source_files = "ios/**/*.swift"
+
+  load 'nitrogen/generated/ios/NitroDataStorage+autolinking.rb'
+  add_nitrogen_files(s)
 
   # React Native and Nitro dependencies
   s.dependency "NitroModules"
   s.dependency "React-jsi"
   s.dependency "React-callinvoker"
-  
+
   install_modules_dependencies(s)
 end

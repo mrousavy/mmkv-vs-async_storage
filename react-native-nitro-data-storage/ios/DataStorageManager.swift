@@ -45,7 +45,7 @@ public class DataStorageManager {
     
     // MARK: - Storage Operations
     
-    public func setItem(key: String, value: [String: Any]) throws {
+    public func setItem(key: String, value: [String: Any?]) throws {
         guard let context = modelContext else {
             throw NSError(
               domain: "NitroDataStorage",
