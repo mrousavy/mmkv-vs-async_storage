@@ -1,20 +1,20 @@
-import type { HybridObject } from 'react-native-nitro-modules';
+import type { AnyMap, HybridObject } from 'react-native-nitro-modules';
 
 /**
  * A high-performance data storage module using Nitro for direct native access.
  * Internal interface - uses direct object passing without JSON serialization
  */
-export interface NitroDataStorageNative
+export interface DataStorage
   extends HybridObject<{ ios: 'swift'; android: 'kotlin' }> {
   /**
    * Set a value for the given key (as object).
    */
-  setItem(key: string, value: Record<string, any>): void;
+  setItem(key: string, value: AnyMap): void;
 
   /**
    * Get the value for the given key (as object), or undefined if it does not exist.
    */
-  getItem(key: string): Record<string, any> | undefined;
+  getItem(key: string): AnyMap | undefined;
 
   /**
    * Remove the value for the given key.
@@ -39,18 +39,5 @@ export interface NitroDataStorageNative
   /**
    * Get the total number of items in storage.
    */
-  readonly count: number;
-}
-
-/**
- * Public API with object serialization
- */
-export interface NitroDataStorage {
-  setItem(key: string, value: Record<string, any>): void;
-  getItem(key: string): Record<string, any> | undefined;
-  removeItem(key: string): boolean;
-  getAllKeys(): string[];
-  clear(): void;
-  contains(key: string): boolean;
   readonly count: number;
 }
