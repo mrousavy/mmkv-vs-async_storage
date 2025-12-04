@@ -5,7 +5,7 @@ import type { AnyMap, HybridObject } from 'react-native-nitro-modules';
  * Internal interface - uses direct object passing without JSON serialization
  */
 export interface DataStorage
-  extends HybridObject<{ ios: 'swift'; android: 'kotlin' }> {
+  extends HybridObject<{ ios: 'swift' }> {
   /**
    * Set a value for the given key (as object).
    */
