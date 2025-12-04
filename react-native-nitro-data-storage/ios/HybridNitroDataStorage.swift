@@ -1,109 +1,58 @@
 import Foundation
 import SwiftData
+import NitroModules
 
 /**
  * Swift implementation of NitroDataStorage using SwiftData
  */
-@objc(HybridNitroDataStorage)
-public class HybridNitroDataStorage: NSObject {
-  private let manager: DataStorageManager
+public class HybridDataStorage: HybridDataStorageSpec {
+  private let manager = DataStorageManager.shared
   
-  @objc
-  public var memorySize: Int {
-    return MemoryLayout<HybridNitroDataStorage>.size
-  }
-  
-  public override init() {
-    self.manager = DataStorageManager.shared
-    super.init()
-  }
-  
-  @objc
-  public func setItem(key: String, value: [String: Any]) throws {
-    guard !key.isEmpty else {
-      let error = NSError(
-        domain: "NitroDataStorage",
-        code: 1,
-        userInfo: [NSLocalizedDescriptionKey: "Key cannot be empty"]
-      )
-      throw error
-    }
-    
-    try manager.setItem(key: key, value: value)
-  }
-  
-  @objc
-  public func getItem(key: String, error: NSErrorPointer) -> [String: Any]? {
-    do {
-      return try manager.getItem(key: key)
-    } catch let err as NSError {
-      error?.pointee = err
-      return nil
-    }
-  }
-  
-  @objc
-  public func removeItem(key: String, error: NSErrorPointer) -> NSNumber {
-    guard !key.isEmpty else {
-      return NSNumber(value: false)
-    }
-    
-    do {
-      try manager.removeItem(key: key)
-      return NSNumber(value: true)
-    } catch let err as NSError {
-      error?.pointee = err
-      return NSNumber(value: false)
-    }
-  }
-  
-  @objc
-  public func getAllKeys(error: NSErrorPointer) -> [String]? {
-    do {
-      return try manager.getAllKeys()
-    } catch let err as NSError {
-      error?.pointee = err
-      return nil
-    }
-  }
-  
-  @objc
-  public func clear(error: NSErrorPointer) {
-    do {
-      try manager.clear()
-    } catch let err as NSError {
-      error?.pointee = err
-    }
-  }
-  
-  @objc
-  public func contains(key: String, error: NSErrorPointer) -> NSNumber {
-    do {
-      let item = try manager.getItem(key: key)
-      return NSNumber(value: item != nil)
-    } catch let err as NSError {
-      error?.pointee = err
-      return NSNumber(value: false)
-    }
-  }
-  
-  @objc
   public var count: Double {
-    do {
-      let keys = try manager.getAllKeys()
-      return Double(keys.count)
-    } catch {
+    guard let keys = try? manager.getAllKeys() else {
       return 0
     }
+    return Double(keys.count)
   }
   
-  @objc
-  public func dispose() {
-    // No resources to dispose
+  public func setItem(key: String, value: AnyMap) throws {
+    guard !key.isEmpty else {
+      throw RuntimeError.error(withMessage: "Key cannot be empty!")
+    }
+    
+    try manager.setItem(key: key, value: value.toDictionary())
   }
   
-  @objc
-  public func toString() -> String {
-    return "[NitroDataStorage]"
+  public func getItem(key: String) throws -> AnyMap? {
+    let dictionary = try manager.getItem(key: key)
+    guard let dictionary else {
+      return nil
+    }
+    return AnyMap.fromDictionaryIgnoreIncompatible(dictionary)
+  }
+  
+  public func removeItem(key: String) throws -> Bool {
+    guard !key.isEmpty else {
+      return false
+    }
+    try manager.removeItem(key: key)
+    return true
+  }
+  
+  public func getAllKeys() throws -> [String] {
+    return try manager.getAllKeys()
+  }
+  
+  public func clear() throws {
+    try manager.clear()
+  }
+  
+  public func contains(key: String) throws -> Bool {
+    do {
+      let value = try manager.getItem(key: key)
+      return value != nil
+    } catch {
+      return false
+    }
   }
 }
