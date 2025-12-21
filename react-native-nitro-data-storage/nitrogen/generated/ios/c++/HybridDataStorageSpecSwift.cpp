@@ -12,10 +12,44 @@ namespace margelo::nitro::storage {
 
 
 jsi::Value HybridDataStorageSpecSwift::setItemRaw(jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* args, size_t count) {
-  
+  return jsi::Value::undefined();
 }
 jsi::Value HybridDataStorageSpecSwift::getItemRaw(jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* args, size_t count) {
+  swift::String string("");
+  auto callback = [&](bool ascii, const void* data, size_t num) {
+    if (ascii) {
+      string.append(swift::String(static_cast<const char*>(data)));
+    }
+  };
+  args[0].getString(runtime).getStringData(runtime, callback);
   
+  swift::Optional<NitroDataStorage::ErasedDictionary> erasedDictionary = this->_swiftPart.getItem(string);
+  if (erasedDictionary.isNone()) {
+    return jsi::Value::undefined();
+  }
+  NitroDataStorage::ErasedDictionary dictionary = erasedDictionary.getUnsafelyUnwrapped();
+  jsi::Object object(runtime);
+  
+  swift::Array<swift::String> keys = dictionary.getKeys();
+  for (const auto& key : keys) {
+    bridge::swift::AnyTypeKind type = dictionary.getTypeKind(key);
+    switch (type) {
+      case bridge::swift::AnyTypeKind::STRING: {
+        object.setProperty(runtime,
+                           jsi::PropNameID::forUtf8(runtime, key),
+                           jsi::String::createFromUtf8(runtime, dictionary.getString(key)));
+        break;
+      }
+      case bridge::swift::AnyTypeKind::DOUBLE: {
+        object.setProperty(runtime,
+                           jsi::PropNameID::forUtf8(runtime, key),
+                           dictionary.getDouble(key));
+        break;
+      }
+    }
+  }
+  
+  return object;
 }
 
 

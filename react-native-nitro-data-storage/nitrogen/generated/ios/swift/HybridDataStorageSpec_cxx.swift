@@ -123,9 +123,9 @@ open class HybridDataStorageSpec_cxx {
 
   // Methods
   @inline(__always)
-  public final func setItem(key: std.string, value: ErasedDictionary) -> bridge.Result_void_ {
+  public final func setItem(key: String, value: ErasedDictionary) -> bridge.Result_void_ {
     do {
-      try self.__implementation.setItem(key: String(key), value: value.getDictionary())
+      try self.__implementation.setItem(key: key, value: value.getDictionary())
       return bridge.create_Result_void_()
     } catch (let __error) {
       let __exceptionPtr = __error.toCpp()
@@ -134,9 +134,9 @@ open class HybridDataStorageSpec_cxx {
   }
   
   @inline(__always)
-  public final func getItem(key: std.string) -> ErasedDictionary? {
+  public final func getItem(key: String) -> ErasedDictionary? {
     do {
-      let __result = try self.__implementation.getItem(key: String(key))
+      let __result = try self.__implementation.getItem(key: key)
       if let __result {
         return ErasedDictionary(__result)
       } else {

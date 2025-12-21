@@ -32,6 +32,10 @@ namespace NitroDataStorage { class ErasedDictionary; }
  * as well as helper functions to interact with those C++ types from Swift.
  */
 namespace margelo::nitro::storage::bridge::swift {
+  enum class AnyTypeKind {
+    STRING,
+    DOUBLE
+  };
 
   // pragma MARK: std::optional<std::shared_ptr<AnyMap>>
   /**
