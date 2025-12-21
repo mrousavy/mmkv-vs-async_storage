@@ -9,25 +9,7 @@
 
 namespace margelo::nitro::storage {
 
-
-
-jsi::Value HybridDataStorageSpecSwift::setItemRaw(jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* args, size_t count) {
-  return jsi::Value::undefined();
-}
-jsi::Value HybridDataStorageSpecSwift::getItemRaw(jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* args, size_t count) {
-  swift::String string("");
-  auto callback = [&](bool ascii, const void* data, size_t num) {
-    if (ascii) {
-      string.append(swift::String(static_cast<const char*>(data)));
-    }
-  };
-  args[0].getString(runtime).getStringData(runtime, callback);
-  
-  swift::Optional<NitroDataStorage::ErasedDictionary> erasedDictionary = this->_swiftPart.getItem(string);
-  if (erasedDictionary.isNone()) {
-    return jsi::Value::undefined();
-  }
-  NitroDataStorage::ErasedDictionary dictionary = erasedDictionary.getUnsafelyUnwrapped();
+jsi::Object dictionaryToObject(jsi::Runtime& runtime, NitroDataStorage::ErasedDictionary dictionary) {
   jsi::Object object(runtime);
   
   swift::Array<swift::String> keys = dictionary.getKeys();
@@ -50,6 +32,46 @@ jsi::Value HybridDataStorageSpecSwift::getItemRaw(jsi::Runtime& runtime, const j
   }
   
   return object;
+}
+
+NitroDataStorage::ErasedDictionary objectToDictionary(jsi::Runtime& runtime, const jsi::Object& object) {
+  jsi::Array keys = object.getPropertyNames(runtime);
+  size_t size = keys.size(runtime);
+  NitroDataStorage::ErasedDictionary dictionary = NitroDataStorage::ErasedDictionary::init(size);
+  
+  for (size_t i = 0; i < size; i++) {
+    jsi::String jsKey = keys.getValueAtIndex(runtime, i).getString(runtime);
+    swift::String key = swift::String(jsKey.utf8(runtime));
+    jsi::Value value = object.getProperty(runtime, jsKey);
+    if (value.isString()) {
+      dictionary.setString(key, swift::String(value.getString(runtime).utf8(runtime)));
+    } else if (value.isNumber()) {
+      dictionary.setDouble(key, value.getNumber());
+    } else [[unlikely]] {
+      throw std::runtime_error("Invalid type! " + value.toString(runtime).utf8(runtime));
+    }
+  }
+  
+  return dictionary;
+}
+
+jsi::Value HybridDataStorageSpecSwift::setItemRaw(jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* args, size_t count) {
+  swift::String key = args[0].getString(runtime).utf8(runtime);
+  NitroDataStorage::ErasedDictionary dictionary = objectToDictionary(runtime, args[1].getObject(runtime));
+  
+  this->_swiftPart.setItem(key, dictionary);
+  
+  return jsi::Value::undefined();
+}
+jsi::Value HybridDataStorageSpecSwift::getItemRaw(jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* args, size_t count) {
+  swift::String key = args[0].getString(runtime).utf8(runtime);
+  
+  swift::Optional<NitroDataStorage::ErasedDictionary> erasedDictionary = this->_swiftPart.getItem(key);
+  if (erasedDictionary.isNone()) {
+    return jsi::Value::undefined();
+  }
+  NitroDataStorage::ErasedDictionary dictionary = erasedDictionary.getUnsafelyUnwrapped();
+  return dictionaryToObject(runtime, dictionary);
 }
 
 

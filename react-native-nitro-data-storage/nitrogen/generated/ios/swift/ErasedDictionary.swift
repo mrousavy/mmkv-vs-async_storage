@@ -13,15 +13,18 @@ public class ErasedDictionary {
   public init() {
     self.dict = Dictionary<String, Any>()
   }
+  public init(reservingCapacity: Int) {
+    self.dict = Dictionary<String, Any>(minimumCapacity: reservingCapacity)
+  }
   
   internal init(_ dictionary: Dictionary<String, Any>) {
     self.dict = dictionary
   }
   
-  public func set(key: String, value: Double) {
+  public func setDouble(key: String, value: Double) {
     dict[key] = value
   }
-  public func set(key: String, value: String) {
+  public func setString(key: String, value: String) {
     dict[key] = value
   }
   
