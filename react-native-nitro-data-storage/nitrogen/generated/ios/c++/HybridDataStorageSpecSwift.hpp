@@ -12,8 +12,6 @@
 // Forward declaration of `HybridDataStorageSpec_cxx` to properly resolve imports.
 namespace NitroDataStorage { class HybridDataStorageSpec_cxx; }
 
-
-
 #include <string>
 #include <NitroModules/AnyMap.hpp>
 #include <optional>
@@ -66,19 +64,23 @@ namespace margelo::nitro::storage {
   public:
     // Methods
     inline void setItem(const std::string& key, const std::shared_ptr<AnyMap>& value) override {
-      auto __result = _swiftPart.setItem(key, value);
-      if (__result.hasError()) [[unlikely]] {
-        std::rethrow_exception(__result.error());
-      }
+      throw std::runtime_error("C++ only not implemented!");
     }
     inline std::optional<std::shared_ptr<AnyMap>> getItem(const std::string& key) override {
-      auto __result = _swiftPart.getItem(key);
-      if (__result.hasError()) [[unlikely]] {
-        std::rethrow_exception(__result.error());
-      }
-      auto __value = std::move(__result.value());
-      return __value;
+      throw std::runtime_error("C++ only not implemented!");
     }
+    
+    jsi::Value setItemRaw(jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* args, size_t count);
+    jsi::Value getItemRaw(jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* args, size_t count);
+    void loadHybridMethods() override {
+      HybridDataStorageSpec::loadHybridMethods();
+      // load custom methods/properties
+      registerHybrids(this, [](Prototype& prototype) {
+        prototype.registerRawHybridMethod("setItem", 2, &HybridDataStorageSpecSwift::setItemRaw);
+        prototype.registerRawHybridMethod("getItem", 1, &HybridDataStorageSpecSwift::getItemRaw);
+      });
+    }
+    
     inline bool removeItem(const std::string& key) override {
       auto __result = _swiftPart.removeItem(key);
       if (__result.hasError()) [[unlikely]] {

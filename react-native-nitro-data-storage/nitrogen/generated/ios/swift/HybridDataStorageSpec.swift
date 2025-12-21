@@ -14,8 +14,8 @@ public protocol HybridDataStorageSpec_protocol: HybridObject {
   var count: Double { get }
 
   // Methods
-  func setItem(key: String, value: AnyMap) throws -> Void
-  func getItem(key: String) throws -> AnyMap?
+  func setItem(key: String, value: Dictionary<String, Any>) throws -> Void
+  func getItem(key: String) throws -> Dictionary<String, Any>?
   func removeItem(key: String) throws -> Bool
   func getAllKeys() throws -> [String]
   func clear() throws -> Void

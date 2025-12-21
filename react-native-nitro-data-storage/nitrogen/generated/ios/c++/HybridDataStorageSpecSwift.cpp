@@ -8,4 +8,42 @@
 #include "HybridDataStorageSpecSwift.hpp"
 
 namespace margelo::nitro::storage {
+
+jsi::Value HybridDataStorageSpecSwift::setItemRaw(jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* args, size_t count) {
+  swift::String key = args[0].getString(runtime).utf8(runtime);
+  
+  jsi::Function jsonFunc = runtime.global().getPropertyAsObject(runtime, "JSON").getPropertyAsFunction(runtime, "stringify");
+  jsi::String json = jsonFunc.call(runtime, args[1]).getString(runtime);
+  bool wasCalled = false;
+  auto zeroCopyStringCallback = [&](bool ascii, const void* data, size_t length) {
+    if (ascii) {
+      swift::String swiftJson(static_cast<const char*>(data));
+      this->_swiftPart.setItem(key, swiftJson);
+      wasCalled = true;
+    }
+  };
+  json.getStringData(runtime, zeroCopyStringCallback);
+  if (!wasCalled) [[unlikely]] {
+    // slow path
+    swift::String swiftJson = json.utf8(runtime);
+    this->_swiftPart.setItem(key, swiftJson);
+  }
+  
+  return jsi::Value::undefined();
+}
+jsi::Value HybridDataStorageSpecSwift::getItemRaw(jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* args, size_t count) {
+  swift::String key = args[0].getString(runtime).utf8(runtime);
+  
+  swift::Optional<swift::String> jsonOrNull = this->_swiftPart.getItem(key);
+  if (jsonOrNull.isNone()) {
+    return jsi::Value::undefined();
+  }
+  swift::String json = jsonOrNull.getUnsafelyUnwrapped();
+  jsi::Function jsonFunc = runtime.global().getPropertyAsObject(runtime, "JSON").getPropertyAsFunction(runtime, "parse");
+  return jsonFunc.call(runtime, jsi::String::createFromUtf8(runtime, json));
+}
+
+
+
+
 } // namespace margelo::nitro::storage

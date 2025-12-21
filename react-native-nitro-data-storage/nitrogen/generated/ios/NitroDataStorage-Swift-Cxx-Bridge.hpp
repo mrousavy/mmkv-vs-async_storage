@@ -25,11 +25,17 @@ namespace NitroDataStorage { class HybridDataStorageSpec_cxx; }
 #include <string>
 #include <vector>
 
+namespace NitroDataStorage { class ErasedDictionary; }
+
 /**
  * Contains specialized versions of C++ templated types so they can be accessed from Swift,
  * as well as helper functions to interact with those C++ types from Swift.
  */
 namespace margelo::nitro::storage::bridge::swift {
+  enum class AnyTypeKind {
+    STRING,
+    DOUBLE
+  };
 
   // pragma MARK: std::optional<std::shared_ptr<AnyMap>>
   /**
