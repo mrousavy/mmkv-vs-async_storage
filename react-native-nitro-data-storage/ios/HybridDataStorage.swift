@@ -15,20 +15,16 @@ public class HybridDataStorage: HybridDataStorageSpec {
     return Double(keys.count)
   }
   
-  public func setItem(key: String, value: AnyMap) throws {
+  public func setItem(key: String, value: Dictionary<String, Any>) throws {
     guard !key.isEmpty else {
       throw RuntimeError.error(withMessage: "Key cannot be empty!")
     }
     
-    try manager.setItem(key: key, value: value.toDictionary())
+    try manager.setItem(key: key, value: value)
   }
   
-  public func getItem(key: String) throws -> AnyMap? {
-    let dictionary = try manager.getItem(key: key)
-    guard let dictionary else {
-      return nil
-    }
-    return AnyMap.fromDictionaryIgnoreIncompatible(dictionary)
+  public func getItem(key: String) throws -> Dictionary<String, Any>? {
+    return try manager.getItem(key: key)
   }
   
   public func removeItem(key: String) throws -> Bool {

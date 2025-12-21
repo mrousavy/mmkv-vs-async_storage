@@ -8,4 +8,17 @@
 #include "HybridDataStorageSpecSwift.hpp"
 
 namespace margelo::nitro::storage {
+
+
+
+jsi::Value HybridDataStorageSpecSwift::setItemRaw(jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* args, size_t count) {
+  
+}
+jsi::Value HybridDataStorageSpecSwift::getItemRaw(jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* args, size_t count) {
+  
+}
+
+
+
+
 } // namespace margelo::nitro::storage
