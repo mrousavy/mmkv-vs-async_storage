@@ -9,69 +9,38 @@
 
 namespace margelo::nitro::storage {
 
-jsi::Object dictionaryToObject(jsi::Runtime& runtime, NitroDataStorage::ErasedDictionary dictionary) {
-  jsi::Object object(runtime);
-  
-  swift::Array<swift::String> keys = dictionary.getKeys();
-  for (const auto& key : keys) {
-    bridge::swift::AnyTypeKind type = dictionary.getTypeKind(key);
-    switch (type) {
-      case bridge::swift::AnyTypeKind::STRING: {
-        object.setProperty(runtime,
-                           jsi::PropNameID::forUtf8(runtime, key),
-                           jsi::String::createFromUtf8(runtime, dictionary.getString(key)));
-        break;
-      }
-      case bridge::swift::AnyTypeKind::DOUBLE: {
-        object.setProperty(runtime,
-                           jsi::PropNameID::forUtf8(runtime, key),
-                           dictionary.getDouble(key));
-        break;
-      }
-    }
-  }
-  
-  return object;
-}
-
-NitroDataStorage::ErasedDictionary objectToDictionary(jsi::Runtime& runtime, const jsi::Object& object) {
-  jsi::Array keys = object.getPropertyNames(runtime);
-  size_t size = keys.size(runtime);
-  NitroDataStorage::ErasedDictionary dictionary = NitroDataStorage::ErasedDictionary::init(size);
-  
-  for (size_t i = 0; i < size; i++) {
-    jsi::String jsKey = keys.getValueAtIndex(runtime, i).getString(runtime);
-    swift::String key = swift::String(jsKey.utf8(runtime));
-    jsi::Value value = object.getProperty(runtime, jsKey);
-    if (value.isString()) {
-      dictionary.setString(key, swift::String(value.getString(runtime).utf8(runtime)));
-    } else if (value.isNumber()) {
-      dictionary.setDouble(key, value.getNumber());
-    } else [[unlikely]] {
-      throw std::runtime_error("Invalid type! " + value.toString(runtime).utf8(runtime));
-    }
-  }
-  
-  return dictionary;
-}
-
 jsi::Value HybridDataStorageSpecSwift::setItemRaw(jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* args, size_t count) {
   swift::String key = args[0].getString(runtime).utf8(runtime);
-  NitroDataStorage::ErasedDictionary dictionary = objectToDictionary(runtime, args[1].getObject(runtime));
   
-  this->_swiftPart.setItem(key, dictionary);
+  jsi::Function jsonFunc = runtime.global().getPropertyAsObject(runtime, "JSON").getPropertyAsFunction(runtime, "stringify");
+  jsi::String json = jsonFunc.call(runtime, args[1]).getString(runtime);
+  bool wasCalled = false;
+  auto zeroCopyStringCallback = [&](bool ascii, const void* data, size_t length) {
+    if (ascii) {
+      swift::String swiftJson(static_cast<const char*>(data));
+      this->_swiftPart.setItem(key, swiftJson);
+      wasCalled = true;
+    }
+  };
+  json.getStringData(runtime, zeroCopyStringCallback);
+  if (!wasCalled) [[unlikely]] {
+    // slow path
+    swift::String swiftJson = json.utf8(runtime);
+    this->_swiftPart.setItem(key, swiftJson);
+  }
   
   return jsi::Value::undefined();
 }
 jsi::Value HybridDataStorageSpecSwift::getItemRaw(jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* args, size_t count) {
   swift::String key = args[0].getString(runtime).utf8(runtime);
   
-  swift::Optional<NitroDataStorage::ErasedDictionary> erasedDictionary = this->_swiftPart.getItem(key);
-  if (erasedDictionary.isNone()) {
+  swift::Optional<swift::String> jsonOrNull = this->_swiftPart.getItem(key);
+  if (jsonOrNull.isNone()) {
     return jsi::Value::undefined();
   }
-  NitroDataStorage::ErasedDictionary dictionary = erasedDictionary.getUnsafelyUnwrapped();
-  return dictionaryToObject(runtime, dictionary);
+  swift::String json = jsonOrNull.getUnsafelyUnwrapped();
+  jsi::Function jsonFunc = runtime.global().getPropertyAsObject(runtime, "JSON").getPropertyAsFunction(runtime, "parse");
+  return jsonFunc.call(runtime, jsi::String::createFromUtf8(runtime, json));
 }
 
 

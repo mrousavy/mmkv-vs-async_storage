@@ -5,6 +5,7 @@
 //  Created by Marc Rousavy on 21.12.25.
 //
 
+import Foundation
 
 public class ErasedDictionary {
   public typealias bridge = margelo.nitro.storage.bridge.swift
@@ -16,6 +17,11 @@ public class ErasedDictionary {
   public init(reservingCapacity: Int) {
     self.dict = Dictionary<String, Any>(minimumCapacity: reservingCapacity)
   }
+  public init(jsonData: UnsafeBufferPointer<UInt8>) {
+    let data = Data(buffer: jsonData)
+    let decoded = try! JSONSerialization.jsonObject(with: data, options: [])
+    self.dict = decoded as! Dictionary<String, Any>
+  }
   
   internal init(_ dictionary: Dictionary<String, Any>) {
     self.dict = dictionary
@@ -26,6 +32,15 @@ public class ErasedDictionary {
   }
   public func setString(key: String, value: String) {
     dict[key] = value
+  }
+  public func setDoubleArray(key: String, value: [Double]) {
+    dict[key] = value
+  }
+  public func setStringArray(key: String, value: [String]) {
+    dict[key] = value
+  }
+  public func setObject(key: String, value: ErasedDictionary) {
+    dict[key] = value.dict
   }
   
   public func getKeys() -> [String] {

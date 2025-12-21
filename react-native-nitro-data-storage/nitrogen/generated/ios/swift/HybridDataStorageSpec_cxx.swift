@@ -123,9 +123,10 @@ open class HybridDataStorageSpec_cxx {
 
   // Methods
   @inline(__always)
-  public final func setItem(key: String, value: ErasedDictionary) -> bridge.Result_void_ {
+  public final func setItem(key: String, valueJSON: String) -> bridge.Result_void_ {
     do {
-      try self.__implementation.setItem(key: key, value: value.getDictionary())
+      let any = try JSONSerialization.jsonObject(with: valueJSON.data(using: .utf8)!)
+      try self.__implementation.setItem(key: key, value: any as! Dictionary<String, Any>)
       return bridge.create_Result_void_()
     } catch (let __error) {
       let __exceptionPtr = __error.toCpp()
@@ -134,11 +135,12 @@ open class HybridDataStorageSpec_cxx {
   }
   
   @inline(__always)
-  public final func getItem(key: String) -> ErasedDictionary? {
+  public final func getItem(key: String) -> String? {
     do {
       let __result = try self.__implementation.getItem(key: key)
       if let __result {
-        return ErasedDictionary(__result)
+        let data = try JSONSerialization.data(withJSONObject: __result)
+        return String(data: data, encoding: .utf8)
       } else {
         return nil
       }
